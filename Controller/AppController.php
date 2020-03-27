@@ -249,7 +249,7 @@ class getPubgInfo extends AppController
     private function getPubgData($mode, $url)
     {
         // apiKey
-        $apiKey = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJqdGkiOiJmMTI4MDdmMC0wODQ0LTAxMzgtNzExOS0yZGY4YzdjNjQ2ZmYiLCJpc3MiOiJnYW1lbG9ja2VyIiwiaWF0IjoxNTc3MTY5MDg5LCJwdWIiOiJibHVlaG9sZSIsInRpdGxlIjoicHViZyIsImFwcCI6ImNsb3NlcjAwNTUtZ21hIn0.5HsuNmn8_mNZfoqJTCA4R1OJlFvAuVio7g_TM7Fj8pY";
+        $apiKey = "apikey";
 
         // curlセッション初期化
         $curl = curl_init();
@@ -450,7 +450,7 @@ class getLolInfo extends AppController
             return $lolPlayerInfo;
         }
 
-        $apiKey = 'RGAPI-18b467f5-f7e8-434e-905e-dda1922e7929'; // ApiKey
+        $apiKey = 'apikey'; // ApiKey
 
         if ($type === 0) {
             // getSummonerId and getLevel
