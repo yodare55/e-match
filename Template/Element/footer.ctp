@@ -246,7 +246,6 @@
                         <div class="modal_btn_area">
                             <a class="btn_profile" href="<?php echo $this->Url->build(["controller" => "profiledetail", "action" => "index"])?>?id=<?= $i->rq_user_id ?>">プロフィールを見る</a>
                         </div>
-                        <p class="time">1分前</p>
                     </div>
                 <?php break;
                 case 2:
@@ -256,12 +255,12 @@
                             <a href="<?php echo $this->Url->build(["controller" => "profiledetail", "action" => "index"])?>?id=<?= $i->rq_user_id ?>"><?= $i->rq_name ?></a>さんへゲームプレイリクエストを送りました。
                         </p>
                         <p class="after_msg permit_msg">
-                            <?= $i->rq_name ?>さんからゲームプレイリクエストが許可されました。
+                            <?= $i
+                            ->rq_name ?>さんからゲームプレイリクエストが許可されました。
                         </p>
                         <div class="modal_btn_area">
                             <a class="btn_profile" href="<?php echo $this->Url->build(["controller" => "profiledetail", "action" => "index"])?>?id=<?= $i->rq_user_id ?>">プロフィールを見る</a>
                         </div>
-                        <p class="time">1分前</p>
                     </div>
                 <?php break;
                 case 3:
@@ -276,7 +275,6 @@
                         <div class="modal_btn_area">
                             <a class="btn_profile" href="<?php echo $this->Url->build(["controller" => "profiledetail", "action" => "index"])?>?id=<?= $i->rq_user_id ?>">プロフィールを見る</a>
                         </div>
-                        <p class="time">1分前</p>
                     </div>
                 <?php break;
             }
@@ -298,7 +296,6 @@
                                 拒否
                             </button>
                         </div>
-                        <p class="time">1分前</p>
                     </div>
                 <?php break;
                 case 2:
@@ -318,7 +315,6 @@
                                 拒否
                             </button>
                         </div>
-                        <p class="time">1分前</p>
                     </div>
                 <?php break;
                 case 3:
@@ -338,7 +334,6 @@
                             拒否
                         </button>
                     </div>
-                    <p class="time">1分前</p>
                 </div>
     <?php break;
             }

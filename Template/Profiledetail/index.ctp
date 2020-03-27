@@ -336,7 +336,7 @@
 				<li class="rank-row"><span id="r6s-rank" class="rank-deco"><?= h($r6sPlayerInfo["rank"]) ?></li>
 				<li class="other-deco"><span id="r6s-mmr" class="char-deco"><?= h($r6sPlayerInfo["mmr"]) ?></span> MMR</li>
 				<li class="other-deco">Level <span id="r6s-level" class="char-deco"><?= h($r6sPlayerInfo["level"]) ?></li>
-				<li class="other-deco">Win Rate <span id="r6s-rate" class="char-deco"><?= h($r6sPlayerInfo["winRate"]) ?>%</span></li>
+				<li class="other-deco">Win Rate <span id="r6s-rate" class="char-deco"><?= h($r6sPlayerInfo["winRate"]) ?></span></li>
 				<li class="other-deco">Kill/Death Rate <span id="r6s-kd" class="char-deco"><?= h($r6sPlayerInfo["kd"]) ?></span></li>
 			</ul>
 		</div>
@@ -439,11 +439,11 @@
 			// 24
 			/Champion/,
 			/Diamond/,
-			/Platinum[1-3]/,
-			/Gold[1-3]/,
-			/Silver[1-5]/,
-			/Bronze[1-5]/,
-			/Copper[1-5]/,
+			/Platinum [1-3]/,
+			/Gold [1-3]/,
+			/Silver [1-5]/,
+			/Bronze [1-5]/,
+			/Copper [1-5]/,
 			/Unranked/
 		];
 
@@ -452,11 +452,11 @@
 			/LoneSurvivor/,
 			/Survivor/,
 			/Expert/,
-			/Specialist[1-5]/,
-			/Skilled[1-5]/,
-			/Experienced[1-5]/,
-			/Novice[1-5]/,
-			/Beginner[1-5]/,
+			/Specialist [1-5]/,
+			/Skilled [1-5]/,
+			/Experienced [1-5]/,
+			/Novice [1-5]/,
+			/Beginner [1-5]/,
 			/Unranked/
 		];
 
@@ -465,19 +465,19 @@
 			/Challenger/,
 			/GrandMaster/,
 			/Master/,
-			/Diamond[1-4]/,
-			/Platinum[1-4]/,
-			/Gold[1-4]/,
-			/Silver[1-4]/,
-			/Bronze[1-4]/,
-			/Iron[1-4]/,
+			/Diamond [1-4]/,
+			/Platinum [1-4]/,
+			/Gold [1-4]/,
+			/Silver [1-4]/,
+			/Bronze [1-4]/,
+			/Iron [1-4]/,
 			/Unranked/
 		];
 
 		var r6s = "r6s";
 		var pubg = "pubg";
 		var lol = "lol";
-		
+
 		if (R6SFLG == 1) {
 			r6sRankColor();
 		} else {
@@ -502,6 +502,7 @@
 		function r6sRankColor() {
 			var index = 0;
 			var r6sRank = document.getElementById("r6s-rank");
+            console.log(r6sRank);
 			for (var i = 0; i < r6sRankArray.length; i++) {
 				if (r6sRankArray[i].test(r6sRank.textContent)) {
 					var style = r6sRank.style;

@@ -63,29 +63,31 @@ class getR6sInfo extends AppController
 
         if ($type === 0) { // ProfileReg
             // get id
-            $url = "https://r6tab.com/api/search.php?platform=uplay&search=" . $name;
+            $url = "https://r6.api.tab.one/search/uplay/" . $name;
             $r6sInfo = $this->connectionCurl($url);
-            if ($r6sInfo["totalresults"] === 0) {
+            if ($r6sInfo["return"] === false) {
                 $playerInfo["httpCode"] = $r6sInfo["httpCode"];
                 $playerInfo["return"] = false;
 
                 return $playerInfo;
             }
             // Search player name
-            $arrayCount = count($r6sInfo["results"]);
-            for ($i = 0; $i < $arrayCount; $i++) {
-                if (strcmp($r6sInfo["results"][$i]["p_name"], $name) === 0) {
-                    $playerInfo["id"] = $r6sInfo["results"][$i]["p_id"];
+            $key = false;
+            foreach($r6sInfo["players"] as $key => $value) {
+                if($value["profile"]["p_name"] === $name) {
+                    break;
                 }
+                $key = false;
             }
+            $playerInfo["id"] = $key;
         } else {
             $playerInfo["id"] = $id;
         }
 
         // get stats
-        $url = "https://r6tab.com/api/player.php?p_id=" . $playerInfo["id"];
+        $url = "https://r6.api.tab.one/player/" . $playerInfo["id"];
         $r6sDetailInfo = $this->connectionCurl($url);
-        if ($r6sDetailInfo["return"] === false || $r6sDetailInfo["playerfound"] === false) {
+        if ($r6sDetailInfo["return"] === false) {
             $playerInfo["httpCode"] = $r6sDetailInfo["httpCode"];
             $playerInfo["return"] = false;
 
@@ -93,15 +95,15 @@ class getR6sInfo extends AppController
         }
 
         // getRank
-        $playerInfo["rank"] = $this->rankConversion($r6sDetailInfo["ranked"]["mmr"]);
+        $playerInfo["rank"] = $r6sDetailInfo["ranked"]["rankname"];
         // getMmr
-        $playerInfo["mmr"] = $r6sDetailInfo["ranked"]["mmr"];
+        $playerInfo["mmr"] = $r6sDetailInfo["ranked"]["actualmmr"];
         // getKd
-        $playerInfo["kd"] = $this->insertStr($r6sDetailInfo["kd"], 1, ".");
+        $playerInfo["kd"] = $r6sDetailInfo["ranked"]["allkd"];
         // getLevel
-        $playerInfo["level"] = $r6sDetailInfo["p_level"];
+        $playerInfo["level"] = $r6sDetailInfo["stats"]["level"];
         // getWinRate
-        $playerInfo["winRate"] = $this->calcWinRate($r6sDetailInfo["seasonal"]["total_rankedwins"], $r6sDetailInfo["seasonal"]["total_rankedlosses"]);
+        $playerInfo["winRate"] = $r6sDetailInfo["ranked"]["allwl"];
         // http response code
         $playerInfo["httpCode"] = $r6sDetailInfo["httpCode"];
 
@@ -111,6 +113,7 @@ class getR6sInfo extends AppController
     private function connectionCurl($url)
     {
         $curl = curl_init($url);
+        curl_setopt($curl,CURLOPT_FOLLOWLOCATION,true);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
         $result = curl_exec($curl);
         $httpCode = curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
@@ -118,7 +121,7 @@ class getR6sInfo extends AppController
 
         $jsonData = json_decode($result, true);
 
-        if ($httpCode >= 400) {
+        if ($httpCode >= 400 || empty($jsonData)) {
             $curlResult = [
                 "httpCode" => $httpCode,
                 "return" => false,
@@ -130,156 +133,6 @@ class getR6sInfo extends AppController
         $jsonData["return"] = true;
 
         return $jsonData;
-    }
-
-    private function calcWinRate($wins, $losses)
-    {
-        $all = $wins + $losses;
-        if ($wins == 0) {
-            $winRate = 0;
-        } else {
-            $winRate = round($wins / $all, 2) * 100;
-        }
-
-        return $winRate;
-    }
-
-    private function insertStr($src, $num, $insrtStr)
-    {
-        if (strlen($src) == 2) {
-            $tmpStr = substr($src, 0, 0) . "0" . substr($src, 0, strlen($src));
-            return substr($tmpStr, 0, $num) . $insrtStr . substr($tmpStr, $num, strlen($tmpStr));
-        } else {
-            return substr($src, 0, $num) . $insrtStr . substr($src, $num, strlen($src));
-        }
-    }
-
-    private function rankConversion($rank_mmr)
-    {
-        $rankArray = [
-            "UnRanked" => [0, 1099],
-            "Copper5" => [1100, 1199],
-            "Copper4" => [1200, 1299],
-            "Copper3" => [1300, 1399],
-            "Copper2" => [1400, 1499],
-            "Copper1" => [1500, 1599],
-            "Bronze5" => [1600, 1699],
-            "Bronze4" => [1700, 1799],
-            "Bronze3" => [1800, 1899],
-            "Bronze2" => [1900, 1999],
-            "Bronze1" => [2000, 2099],
-            "Silver5" => [2100, 2199],
-            "Silver4" => [2200, 2299],
-            "Silver3" => [2300, 2399],
-            "Silver2" => [2400, 2499],
-            "Silver1" => [2500, 2599],
-            "Gold3" => [2600, 2799],
-            "Gold2" => [2800, 3099],
-            "Gold1" => [3000, 3199],
-            "Platinum3" => [3200, 3599],
-            "Platinum2" => [3600, 3999],
-            "Platinum1" => [4000, 4399],
-            "Diamond" => [4400, 4999],
-            "Champion" => [5000],
-        ];
-
-        switch ($rank_mmr) {
-            case $rank_mmr >= $rankArray["Copper5"][0] && $rank_mmr <= $rankArray["Copper5"][1]:
-                $rank_str = "Copper5";
-                return $rank_str;
-                break;
-            case $rank_mmr >= $rankArray["Copper4"][0] && $rank_mmr <= $rankArray["Copper4"][1]:
-                $rank_str = "Copper4";
-                return $rank_str;
-                break;
-            case $rank_mmr >= $rankArray["Copper3"][0] && $rank_mmr <= $rankArray["Copper3"][1]:
-                $rank_str = "Copper3";
-                return $rank_str;
-                break;
-            case $rank_mmr >= $rankArray["Copper2"][0] && $rank_mmr <= $rankArray["Copper2"][1]:
-                $rank_str = "Copper2";
-                return $rank_str;
-                break;
-            case $rank_mmr >= $rankArray["Copper1"][0] && $rank_mmr <= $rankArray["Copper1"][1]:
-                $rank_str = "Copper1";
-                return $rank_str;
-                break;
-            case $rank_mmr >= $rankArray["Bronze5"][0] && $rank_mmr <= $rankArray["Bronze5"][1]:
-                $rank_str = "Bronze5";
-                return $rank_str;
-                break;
-            case $rank_mmr >= $rankArray["Bronze4"][0] && $rank_mmr <= $rankArray["Bronze4"][1]:
-                $rank_str = "Bronze4";
-                return $rank_str;
-                break;
-            case $rank_mmr >= $rankArray["Bronze3"][0] && $rank_mmr <= $rankArray["Bronze3"][1]:
-                $rank_str = "Bronze3";
-                return $rank_str;
-                break;
-            case $rank_mmr >= $rankArray["Bronze2"][0] && $rank_mmr <= $rankArray["Bronze2"][1]:
-                $rank_str = "Bronze2";
-                return $rank_str;
-                break;
-            case $rank_mmr >= $rankArray["Bronze1"][0] && $rank_mmr <= $rankArray["Bronze1"][1]:
-                $rank_str = "Bronze1";
-                return $rank_str;
-                break;
-            case $rank_mmr >= $rankArray["Silver5"][0] && $rank_mmr <= $rankArray["Silver5"][1]:
-                $rank_str = "Silver5";
-                return $rank_str;
-                break;
-            case $rank_mmr >= $rankArray["Silver4"][0] && $rank_mmr <= $rankArray["Silver4"][1]:
-                $rank_str = "Silver4";
-                return $rank_str;
-                break;
-            case $rank_mmr >= $rankArray["Silver3"][0] && $rank_mmr <= $rankArray["Silver3"][1]:
-                $rank_str = "Silver3";
-                return $rank_str;
-                break;
-            case $rank_mmr >= $rankArray["Silver2"][0] && $rank_mmr <= $rankArray["Silver2"][1]:
-                $rank_str = "Silver2";
-                return $rank_str;
-                break;
-            case $rank_mmr >= $rankArray["Silver1"][0] && $rank_mmr <= $rankArray["Silver1"][1]:
-                $rank_str = "Silver1";
-                return $rank_str;
-                break;
-            case $rank_mmr >= $rankArray["Gold3"][0] && $rank_mmr <= $rankArray["Gold3"][1]:
-                $rank_str = "Gold3";
-                return $rank_str;
-                break;
-            case $rank_mmr >= $rankArray["Gold2"][0] && $rank_mmr <= $rankArray["Gold2"][1]:
-                $rank_str = "Gold2";
-                return $rank_str;
-                break;
-            case $rank_mmr >= $rankArray["Gold1"][0] && $rank_mmr <= $rankArray["Gold1"][1]:
-                $rank_str = "Gold1";
-                return $rank_str;
-                break;
-            case $rank_mmr >= $rankArray["Platinum3"][0] && $rank_mmr <= $rankArray["Platinum3"][1]:
-                $rank_str = "Platinum3";
-                return $rank_str;
-                break;
-            case $rank_mmr >= $rankArray["Platinum2"][0] && $rank_mmr <= $rankArray["Platinum2"][1]:
-                $rank_str = "Platinum2";
-                return $rank_str;
-                break;
-            case $rank_mmr >= $rankArray["Platinum1"][0] && $rank_mmr <= $rankArray["Platinum1"][1]:
-                $rank_str = "Platinum1";
-                return $rank_str;
-                break;
-            case $rank_mmr >= $rankArray["Diamond"][0] && $rank_mmr <= $rankArray["Diamond"][1]:
-                $rank_str = "Diamond";
-                return $rank_str;
-                break;
-            case $rank_mmr >= $rankArray["Champion"][0]:
-                $rank_str = "Champion";
-                return $rank_str;
-                break;
-            default:
-                $rank_str = "UnRnked";
-                return $rank_str;
-        }
     }
 }
 
@@ -396,7 +249,7 @@ class getPubgInfo extends AppController
     private function getPubgData($mode, $url)
     {
         // apiKey
-        $apiKey = "apikey";
+        $apiKey = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJqdGkiOiJmMTI4MDdmMC0wODQ0LTAxMzgtNzExOS0yZGY4YzdjNjQ2ZmYiLCJpc3MiOiJnYW1lbG9ja2VyIiwiaWF0IjoxNTc3MTY5MDg5LCJwdWIiOiJibHVlaG9sZSIsInRpdGxlIjoicHViZyIsImFwcCI6ImNsb3NlcjAwNTUtZ21hIn0.5HsuNmn8_mNZfoqJTCA4R1OJlFvAuVio7g_TM7Fj8pY";
 
         // curlセッション初期化
         $curl = curl_init();
@@ -466,103 +319,103 @@ class getPubgInfo extends AppController
                 return $rankTitle;
                 break;
             case "1-5":
-                $rankTitle = "Beginner5";
+                $rankTitle = "Beginner 5";
                 return $rankTitle;
                 break;
             case "1-4":
-                $rankTitle = "Beginner4";
+                $rankTitle = "Beginner 4";
                 return $rankTitle;
                 break;
             case "1-3":
-                $rankTitle = "Beginner3";
+                $rankTitle = "Beginner 3";
                 return $rankTitle;
                 break;
             case "1-2":
-                $rankTitle = "Beginner2";
+                $rankTitle = "Beginner 2";
                 return $rankTitle;
                 break;
             case "1-1":
-                $rankTitle = "Beginner1";
+                $rankTitle = "Beginner 1";
                 return $rankTitle;
                 break;
             case "2-5":
-                $rankTitle = "Novice5";
+                $rankTitle = "Novice 5";
                 return $rankTitle;
                 break;
             case "2-4":
-                $rankTitle = "Novice4";
+                $rankTitle = "Novice 4";
                 return $rankTitle;
                 break;
             case "2-3":
-                $rankTitle = "Novice3";
+                $rankTitle = "Novice 3";
                 return $rankTitle;
                 break;
             case "2-2":
-                $rankTitle = "Novice2";
+                $rankTitle = "Novice 2";
                 return $rankTitle;
                 break;
             case "2-1":
-                $rankTitle = "Novice1";
+                $rankTitle = "Novice 1";
                 return $rankTitle;
                 break;
             case "3-5":
-                $rankTitle = "Experienced5";
+                $rankTitle = "Experienced 5";
                 return $rankTitle;
                 break;
             case "3-4":
-                $rankTitle = "Experienced4";
+                $rankTitle = "Experienced 4";
                 return $rankTitle;
                 break;
             case "3-3":
-                $rankTitle = "Experienced3";
+                $rankTitle = "Experienced 3";
                 return $rankTitle;
                 break;
             case "3-2":
-                $rankTitle = "Experienced2";
+                $rankTitle = "Experienced 2";
                 return $rankTitle;
                 break;
             case "3-1":
-                $rankTitle = "Experienced1";
+                $rankTitle = "Experienced 1";
                 return $rankTitle;
                 break;
             case "4-5":
-                $rankTitle = "Skilled5";
+                $rankTitle = "Skilled 5";
                 return $rankTitle;
                 break;
             case "4-4":
-                $rankTitle = "Skilled4";
+                $rankTitle = "Skilled 4";
                 return $rankTitle;
                 break;
             case "4-3":
-                $rankTitle = "Skilled3";
+                $rankTitle = "Skilled 3";
                 return $rankTitle;
                 break;
             case "4-2":
-                $rankTitle = "Skilled2";
+                $rankTitle = "Skilled 2";
                 return $rankTitle;
                 break;
             case "4-1":
-                $rankTitle = "Skilled1";
+                $rankTitle = "Skilled 1";
                 return $rankTitle;
                 break;
             case "5-5":
-                $rankTitle = "Specialist5";
+                $rankTitle = "Specialist 5";
                 return $rankTitle;
                 break;
             case "5-4":
-                $rankTitle = "Specialist4";
+                $rankTitle = "Specialist 4";
                 return $rankTitle;
                 break;
             case "5-3":
-                $rankTitle = "Specialist3";
+                $rankTitle = "Specialist 3";
                 return $rankTitle;
                 break;
             case "5-2":
-                $rankTitle = "Specialist2";
+                $rankTitle = "Specialist 2";
                 return $rankTitle;
                 break;
             case "5-1":
-                $rankTitle = "Specialist1";
+                $rankTitle = "Specialist 1";
                 return $rankTitle;
                 break;
             case "6-0":
@@ -597,7 +450,7 @@ class getLolInfo extends AppController
             return $lolPlayerInfo;
         }
 
-        $apiKey = 'apikey'; // ApiKey
+        $apiKey = 'RGAPI-18b467f5-f7e8-434e-905e-dda1922e7929'; // ApiKey
 
         if ($type === 0) {
             // getSummonerId and getLevel
@@ -631,7 +484,7 @@ class getLolInfo extends AppController
         $lolPlayerInfo["soloRank"] = ucfirst($lolPlayerInfo["soloRank"]);
         if (($lolData[0]["tier"] != "CHALLENGER") and ($lolData[0]["tier"] != "GRANDMASTER") and ($lolData[0]["tier"] != "MASTER")) {
             $num = $this->rankConversion($lolData[0]["rank"]);
-            $lolPlayerInfo["soloRank"] = $lolPlayerInfo["soloRank"] . $num;
+            $lolPlayerInfo["soloRank"] = $lolPlayerInfo["soloRank"] . " " . $num;
         }
         // league point
         $lolPlayerInfo["leaguePoints"] = $lolData[0]["leaguePoints"];

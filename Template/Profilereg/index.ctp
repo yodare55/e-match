@@ -120,7 +120,7 @@
 	}
 
 	.pubg-margin {
-		margin-right: 17px;
+		margin-right: 8px;
 	}
 
 	.lol-margin {
@@ -296,7 +296,7 @@
 
 	<div class="outher-row">
 		<label>プロフィール画像</label>
-		<img name="profile-img" id="file-preview" src="/e-match/img/noimage.png" width="80" height="80" alt="プロフィール画像">
+		<img name="profile-img" id="file-preview" src="/img/noimage.png" width="80" height="80" alt="プロフィール画像">
 		<div class="column">
 			<label class="upbtn_label">
 				ファイル選択
